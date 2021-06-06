@@ -1,16 +1,16 @@
 <template>
   <div id="app">
-    <HelloWorld />
+    <PlayerBar />
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import HelloWorld from "./components/PlayerBar.vue";
+import PlayerBar from "./components/PlayerBar.vue";
 
 @Component({
   components: {
-    HelloWorld,
+    PlayerBar,
   },
 })
 export default class App extends Vue {}
@@ -20,6 +20,6 @@ export default class App extends Vue {}
 body {
   margin: 0;
   padding: 0;
-  background-color: #2b2b2b;
+  // background-color: #2b2b2b;
 }
 </style>
