@@ -25,6 +25,7 @@
     "src/**/*.vue",
     "src/**/*.js",
     "src/**/*.svg",
+    "src/**/*.mp3",
     "tests/**/*.ts",
     "tests/**/*.tsx"
   ],

@@ -11,7 +11,7 @@
     </div>
     <div class="middle">
       <span class="current-time">{{
-        MusicUtils.secondToMinute(dCurrentTime)
+        MusicUtils.secondToMinute(currentTime)
       }}</span>
       <el-slider
         v-model="progress"
@@ -43,13 +43,11 @@ type PlayMode = "loop" | "radom" | "loop-list";
       MusicUtils: MusicUtils,
       PlaySvg: PlaySvg,
       PauseSvg: PauseSvg,
-      dCurrentTime: this.$props.currentTime,
     };
   },
 })
 export default class PlayerBar extends Vue {
-  @Prop({ default: 0 }) private currentTime!: number;
-  @Prop({ default: 0 }) private endTime!: number;
+  @Prop({ default: null }) private music?: HTMLAudioElement;
 
   private autoMove: number | undefined; //自动移动 异步事件
 
@@ -57,6 +55,23 @@ export default class PlayerBar extends Vue {
 
   private playing: PlayState = "pause"; //播放状态
   private mode: PlayMode = "loop"; //播放状态
+
+  //音乐播放时间
+  private currentTime: number = 0;
+  private endTime: number = 0;
+
+  beforeMount() {
+    if (this.music) {
+      //循环播放
+      this.music.loop = true;
+      //当持续时间改变时
+      this.music.addEventListener("durationchange", () => {
+        if (this.music) {
+          this.endTime = this.music.duration;
+        }
+      });
+    }
+  }
 
   mounted(): void {
     let slider_btn = document.querySelector(
@@ -71,6 +86,7 @@ export default class PlayerBar extends Vue {
    * 松开进度条按钮时
    */
   change(): void {
+    this.applayTimeToMusic();
     if (this.playing !== "pause") {
       this.autoMoveProgress();
     }
@@ -85,15 +101,17 @@ export default class PlayerBar extends Vue {
 
   input(value: number): void {
     if (!this.autoMove) {
-      this.$data.dCurrentTime = (value / 100) * this.endTime;
+      this.currentTime = (value / 100) * this.endTime;
     }
   }
 
   stateChange(): void {
     this.playing = this.playing === "pause" ? "play" : "pause";
     if (this.playing === "pause") {
+      this.music?.pause();
       this.stopAutoMoveProgress();
     } else {
+      this.music?.play();
       this.autoMoveProgress();
     }
     console.log(this.playing);
@@ -110,9 +128,13 @@ export default class PlayerBar extends Vue {
     if (!this.autoMove) {
       //异步任务
       this.autoMove = setInterval(() => {
+        if (this.currentTime >= this.endTime) {
+          this.progress = 0;
+          this.currentTime = 0;
+        }
         //计算百分比, 0 ~ 100
         this.progress = MusicUtils.computedPercent(
-          this.$data.dCurrentTime++,
+          this.currentTime++,
           this.endTime
         );
       }, 1000);
@@ -123,6 +145,14 @@ export default class PlayerBar extends Vue {
     if (this.autoMove) {
       clearInterval(this.autoMove);
       this.autoMove = undefined;
+    }
+  }
+
+  // 应用进度条的时间到音乐
+  applayTimeToMusic() {
+    if (this.music) {
+      console.log(this.music.currentTime);
+      this.music.currentTime = this.currentTime;
     }
   }
 }
