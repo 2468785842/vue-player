@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <PlayerBar />
+    <PlayerBar :endTime="end" />
   </div>
 </template>
 
@@ -13,13 +13,14 @@ import PlayerBar from "./components/PlayerBar.vue";
     PlayerBar,
   },
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  private end: number = 270;
+}
 </script>
 
 <style lang="scss">
 body {
   margin: 0;
   padding: 0;
-  // background-color: #2b2b2b;
 }
 </style>
