@@ -18,6 +18,7 @@
         :show-tooltip="false"
         @change="change"
         @input="input"
+        ref="elSlider"
       ></el-slider>
       <span class="end-time">{{ MusicUtils.secondToMinute(endTime) }}</span>
     </div>
@@ -29,39 +30,43 @@
 /**
  * 播放条
  */
-import { Component, Prop, Vue } from "vue-property-decorator";
-import PlaySvg from "../assets/svg/player-bar/play.svg";
+import { Slider } from "element-ui";
+import { Component, Emit, Vue } from "vue-property-decorator";
 import PauseSvg from "../assets/svg/player-bar/pause.svg";
+import PlaySvg from "../assets/svg/player-bar/play.svg";
 import MusicUtils from "../utils/music-uitls";
 
 type PlayState = "pause" | "play";
 type PlayMode = "loop" | "radom" | "loop-list";
 
+export { PlayState, PlayMode };
+
 @Component({
   data() {
     return {
-      MusicUtils: MusicUtils,
-      PlaySvg: PlaySvg,
-      PauseSvg: PauseSvg,
+      MusicUtils,
+      PlaySvg,
+      PauseSvg,
     };
   },
 })
 export default class PlayerBar extends Vue {
-  @Prop({ default: null }) private music?: HTMLAudioElement;
+  private music?: HTMLAudioElement;
 
   private autoMove: number | undefined; //自动移动 异步事件
 
   private progress: number = 0; //0 ~ 100
 
   private playing: PlayState = "pause"; //播放状态
-  private mode: PlayMode = "loop"; //播放状态
+  private mode: PlayMode = "loop"; //播放模式
 
   //音乐播放时间
   private currentTime: number = 0;
   private endTime: number = 0;
 
-  beforeMount() {
-    if (this.music) {
+  public playMusic(music: HTMLAudioElement): void {
+    if (music) {
+      this.music = music;
       //循环播放
       this.music.loop = true;
       //当持续时间改变时
@@ -73,19 +78,32 @@ export default class PlayerBar extends Vue {
     }
   }
 
-  mounted(): void {
-    let slider_btn = document.querySelector(
-      "#frame .el-slider .el-slider__runway"
+  public mounted(): void {
+    //为进度条添加鼠标按下事件
+    //循环获取Slider的dom节点
+    [...((this.$refs.elSlider as Slider).$vnode.elm as Node).childNodes].every(
+      (item: Node) => {
+        console.log(item.nodeName);
+        if (item.nodeName !== "#comment") {
+          item.addEventListener("mousedown", this.down);
+          return false;
+        }
+        return true;
+      }
     );
-    if (slider_btn) {
-      slider_btn.addEventListener("mousedown", this.down);
-    }
+
+    //当按下空格时, 暂停音乐
+    window.addEventListener("keypress", (event: KeyboardEvent) => {
+      if (event.code === "Space") {
+        this.stateChange();
+      }
+    });
   }
 
   /**
    * 松开进度条按钮时
    */
-  change(): void {
+  public change(): void {
     this.applayTimeToMusic();
     if (this.playing !== "pause") {
       this.autoMoveProgress();
@@ -95,17 +113,18 @@ export default class PlayerBar extends Vue {
   /**
    * 按下进度条时
    */
-  down(): void {
+  public down(): void {
     this.stopAutoMoveProgress();
   }
 
-  input(value: number): void {
+  public input(value: number): void {
     if (!this.autoMove) {
       this.currentTime = (value / 100) * this.endTime;
     }
   }
 
-  stateChange(): void {
+  //播放状态改变时调用
+  public stateChange(): void {
     this.playing = this.playing === "pause" ? "play" : "pause";
     if (this.playing === "pause") {
       this.music?.pause();
@@ -117,14 +136,19 @@ export default class PlayerBar extends Vue {
     console.log(this.playing);
   }
 
-  pre(): void {
+  @Emit("previous")
+  public pre(): PlayState {
     console.log("上一首");
-  }
-  next(): void {
-    console.log("下一首");
+    return this.playing;
   }
 
-  autoMoveProgress(): void {
+  @Emit("next")
+  public next(): PlayState {
+    console.log("下一首");
+    return this.playing;
+  }
+
+  private autoMoveProgress(): void {
     if (!this.autoMove) {
       //异步任务
       this.autoMove = setInterval(() => {
@@ -141,7 +165,7 @@ export default class PlayerBar extends Vue {
     }
   }
 
-  stopAutoMoveProgress(): void {
+  private stopAutoMoveProgress(): void {
     if (this.autoMove) {
       clearInterval(this.autoMove);
       this.autoMove = undefined;
@@ -149,7 +173,7 @@ export default class PlayerBar extends Vue {
   }
 
   // 应用进度条的时间到音乐
-  applayTimeToMusic() {
+  private applayTimeToMusic(): void {
     if (this.music) {
       console.log(this.music.currentTime);
       this.music.currentTime = this.currentTime;
