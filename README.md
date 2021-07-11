@@ -3,6 +3,7 @@
 - 使用vue, sass, typescript编写，仿照网易云音乐的音乐网站（未完成）
 
 - 后台数据使用: [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
+- [gitee](https://gitee.com/l2468785842/vue-player)
 
 ## 布局
 ![](https://gitee.com/l2468785842/vue-player/blob/master/img/layout.png)
