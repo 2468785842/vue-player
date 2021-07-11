@@ -15,10 +15,7 @@ function secondToMinute(second: number): string {
     return temp;
   };
 
-  const m: string = transformInt(second / 60);//minute
-  const s: string = transformInt(second % 60);//second
-
-  return `${m}:${s}`;
+  return `${transformInt(second / 60)}:${transformInt(second % 60)}`;
 }
 
 
