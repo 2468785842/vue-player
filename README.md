@@ -5,7 +5,7 @@
 - 后台数据使用: [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
 
 ## 布局
-![](./img/layout.png)
+![](https://gitee.com/l2468785842/vue-player/blob/master/img/layout.png)
 
 ## 安装项目依赖
 ```shell
