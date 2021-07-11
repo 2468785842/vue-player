@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <MusicListGroup :playLists="personalized" />
+    <MusicListGroup :playLists="personalized">热门推荐</MusicListGroup>
   </div>
 </template>
 
@@ -18,15 +18,13 @@ import { Component, Vue } from "vue-property-decorator";
 export default class Home extends Vue {
   personalized: MusicList[] = [];
   async mounted() {
-    this.personalized = await Api.getPersonalized();
+    this.personalized = await Api.getPersonalized(28);
   }
 }
 </script>
 
 <style lang="scss" scoped>
 .home {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: rgb(243, 243, 243);
 }
 </style>

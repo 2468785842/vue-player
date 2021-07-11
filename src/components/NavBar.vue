@@ -23,7 +23,12 @@ export default class App extends Vue {}
 @import "../red-theme.scss";
 
 nav {
-  width: 100vw;
+  position: sticky;
+  width: 100%;
+  top: 0px;
+  background: white;
+  border-bottom: 2px solid $--color-primary;
+  z-index: 1;
 
   .content {
     width: 1100px;
@@ -38,11 +43,12 @@ nav {
       li {
         float: left;
         height: 70px;
-        padding: 0 10px;
+        padding: 0 20px;
         text-align: center;
         line-height: 70px;
 
         a {
+          font-weight: 600;
           color: black;
           text-decoration: none;
 

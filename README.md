@@ -4,6 +4,9 @@
 
 - 后台数据使用: [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
 
+## 布局
+![](./img/layout.png)
+
 ## 安装项目依赖
 ```shell
 npm install

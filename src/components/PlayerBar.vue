@@ -229,8 +229,9 @@ export default class PlayerBar extends Vue {
 $frame-height: 60px;
 
 #frame {
+  background: white;
   border-top: 2px solid $--color-primary;
-  width: 100vw;
+  width: 100%;
   height: $frame-height;
   position: fixed;
   bottom: 0px;
@@ -273,7 +274,7 @@ $frame-height: 60px;
 
     .right {
       float: right;
-      padding: 15px 0;
+      margin: 15px 0;
     }
 
     .btn {
