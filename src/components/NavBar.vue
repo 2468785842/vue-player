@@ -52,7 +52,8 @@ nav {
           color: black;
           text-decoration: none;
 
-          &:hover {
+          &.router-link-exact-active,
+          :hover {
             color: $--color-primary;
           }
         }

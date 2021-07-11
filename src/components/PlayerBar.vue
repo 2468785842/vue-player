@@ -22,9 +22,13 @@
 
       <!-- 中间 -->
       <div class="middle">
-        <span class="current-time">{{
-          MusicUtils.secondToMinute(currentTime)
-        }}</span>
+        <div class="music-desc">
+          <img class="cover" :src="cover" />
+          <div class="name">{{ name }}</div>
+          <div class="author">{{ author }}</div>
+        </div>
+
+        <span class="current-time">{{ secondToMinute(currentTime) }}</span>
         <el-slider
           v-model="progress"
           :show-tooltip="false"
@@ -32,7 +36,7 @@
           @input="input"
           ref="elSlider"
         ></el-slider>
-        <span class="end-time">{{ MusicUtils.secondToMinute(endTime) }}</span>
+        <span class="end-time">{{ secondToMinute(endTime) }}</span>
       </div>
 
       <!-- 右边 -->
@@ -71,14 +75,14 @@ import Random from "@assets/svg/player-bar/right/random.svg";
 import { PlayModeContext } from "@store/PlayMode";
 import { StateInterface } from "@store/state";
 import { CHANGE_PLAY_MODE, CHANGE_PLAY_STATE } from "@store/type";
-import MusicUtils from "@utils/MusicUitls";
+import { computedPercent, secondToMinute } from "@utils/MusicUtils";
 import { Slider } from "element-ui";
 import { Component, Vue } from "vue-property-decorator";
 
 @Component({
   data() {
     return {
-      MusicUtils,
+      secondToMinute,
       PlaySvg,
       PauseSvg,
       playModeIcon: {
@@ -97,6 +101,10 @@ export default class PlayerBar extends Vue {
   //音乐播放时间
   private currentTime: number = 0;
   private endTime: number = 0;
+
+  author: string = "";
+  name: string = "";
+  cover: string = "";
 
   public mounted(): void {
     let tState: any = this.$store.state;
@@ -156,7 +164,12 @@ export default class PlayerBar extends Vue {
 
     let tPlayState = this.$store.state as StateInterface;
 
-    if (!this.$store.state.music.src) return;
+    if (tPlayState.currentPlayIndex === -1) {
+      return;
+    } else if (!this.$store.state.music.src) {
+      this.$store.state.music.src =
+        tPlayState.playList[tPlayState.currentPlayIndex];
+    }
 
     if (tPlayState.playState === "pause") {
       this.$store.state.music.pause();
@@ -181,10 +194,7 @@ export default class PlayerBar extends Vue {
           if (this.$store.state.playList.length !== 0) tPlayMode.autoPlay();
         }
         //计算百分比, 0 ~ 100
-        this.progress = MusicUtils.computedPercent(
-          this.currentTime++,
-          this.endTime
-        );
+        this.progress = computedPercent(this.currentTime++, this.endTime);
       }, 1000);
     }
   }
@@ -244,6 +254,16 @@ $frame-height: 60px;
     .middle {
       display: inline-block;
       line-height: $frame-height;
+
+      .music-desc {
+        display: inline-block;
+        .cover {
+        }
+        .name {
+        }
+        .author {
+        }
+      }
 
       .el-slider {
         display: inline-block;

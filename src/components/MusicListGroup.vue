@@ -4,9 +4,18 @@
       <slot></slot>
     </div>
     <template v-for="i of playLists">
-      <div v-if="i !== undefined" class="item" v-bind:key="i.id">
+      <div
+        v-if="i !== undefined"
+        class="item"
+        v-bind:key="i.id"
+        @click="setPlayList(i.id)"
+      >
         <img class="cover" :src="i.picUrl" />
-        <div class="count">{{ i.playCount }}</div>
+        <div class="count">
+          <i class="el-icon-headset"></i>&nbsp;{{
+            transformNumberToC(i.playCount)
+          }}
+        </div>
         <a href="#" class="name">{{ i.name }}</a>
       </div>
     </template>
@@ -17,10 +26,24 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 import { MusicList } from "@model/MusicList";
 
-@Component
+import { transformNumberToC } from "@utils/MusicUtils";
+import { Api } from "@api/services";
+
+@Component({
+  data() {
+    return {
+      transformNumberToC,
+    };
+  },
+})
 export default class MusicListGroup extends Vue {
   @Prop()
   playLists?: MusicList[];
+
+  async setPlayList(id: number): Promise<void> {
+    this.$store.state.playList = await Api.getMusicList(id);
+    this.$store.state.currentPlayIndex = 0;
+  }
 }
 </script>
 
@@ -54,7 +77,7 @@ export default class MusicListGroup extends Vue {
     overflow: hidden;
     background: white;
     cursor: pointer;
-    transition: all .1s linear;
+    transition: all 0.1s linear;
     // border: 1px solid $--color-primary;
 
     &:hover {

@@ -11,7 +11,7 @@ describe('test music interface', () => {
     const musicLists: MusicList[] = await Api.getPersonalized();
 
     for (const item of musicLists) {
-      const musics: Music[] = await Api.getMusicList(item);
+      const musics: Music[] = await Api.getMusicList(item.id);
 
       for (const item of musics) {
         console.log('music: ' + JSON.stringify(item));

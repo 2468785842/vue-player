@@ -16,9 +16,9 @@ async function getPersonalized(limit: number = 5, user?: User): Promise<MusicLis
 }
 
 //获取歌单中的音乐
-async function getMusicList(musicList: MusicList): Promise<Music[]> {
+async function getMusicList(id: number): Promise<Music[]> {
   const response: any = await axios.get('/playlist/detail', {
-    params: { id: musicList.id }
+    params: { id }
   });
 
   return await wrapperMusic(response.data.privileges);
