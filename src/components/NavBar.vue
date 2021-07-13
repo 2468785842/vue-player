@@ -24,7 +24,6 @@ export default class App extends Vue {}
 
 nav {
   position: sticky;
-  width: 100%;
   top: 0px;
   background: white;
   border-bottom: 2px solid $--color-primary;
@@ -43,17 +42,22 @@ nav {
       li {
         float: left;
         height: 70px;
-        padding: 0 20px;
         text-align: center;
         line-height: 70px;
 
         a {
+          display: block;
           font-weight: 600;
           color: black;
+          padding: 0 20px;
           text-decoration: none;
+          height: inherit;
 
-          &.router-link-exact-active,
-          :hover {
+          &.router-link-exact-active {
+            color: white;
+            background: $--color-primary;
+          }
+          &:hover:not(.router-link-exact-active) {
             color: $--color-primary;
           }
         }

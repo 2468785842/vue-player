@@ -1,9 +1,14 @@
 /* theme color */
-@import "./red-theme.scss";
+@import './red-theme.scss';
 /* icon font path, required */
-$--font-path: "~element-ui/lib/theme-chalk/fonts";
+$--font-path: '~element-ui/lib/theme-chalk/fonts';
 
-@import "~element-ui/packages/theme-chalk/src/index";
+@import '~element-ui/packages/theme-chalk/src/index';
+
+//自定义加载背景
+.el-loading-mask {
+  background: rgb(243, 243, 243);
+}
 
 //自定义slider按钮样式
 .el-slider__button-wrapper {
@@ -11,6 +16,11 @@ $--font-path: "~element-ui/lib/theme-chalk/fonts";
   height: $size;
   width: $size;
   top: -4px;
+
+  .el-slider.is-vertical & {
+    left: -4px;
+  }
+
   .el-slider__button {
     $size: 10px;
     height: $size;

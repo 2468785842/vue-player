@@ -41,11 +41,23 @@
 
       <!-- 右边 -->
       <div class="right">
-        <img
-          src="@/assets/svg/player-bar/right/volum.svg"
-          class="small-btn volum"
-          @click="showVolum"
-        />
+        <div class="volum">
+          <transition name="volum-fade-out">
+            <el-slider
+              vertical
+              v-show="showVolum"
+              v-model="volum"
+              :show-tooltip="false"
+              @change="changeVolum"
+            ></el-slider>
+          </transition>
+          <img
+            src="@/assets/svg/player-bar/right/volum.svg"
+            class="small-btn"
+            @click="showVolum = !showVolum"
+            title="音量"
+          />
+        </div>
         <img
           :src="playModeIcon[$store.state.playMode]"
           class="small-btn"
@@ -54,8 +66,10 @@
         <img
           src="@/assets/svg/player-bar/right/play-list.svg"
           class="small-btn"
-          @click="showPlayList"
+          @click="showPlayList = !showPlayList"
+          title="播放列表"
         />
+        <div class="hidden btn"><i class="el-icon-arrow-down"></i></div>
       </div>
     </div>
   </div>
@@ -97,6 +111,10 @@ export default class PlayerBar extends Vue {
   private autoMove: number | undefined; //自动移动 异步事件
 
   private progress: number = 0; //0 ~ 100, 当前音乐播放进度百分比
+
+  private volum: number = 0;
+  private showVolum: boolean = false;
+  private showPlayList: boolean = false;
 
   //音乐播放时间
   private currentTime: number = 0;
@@ -157,6 +175,10 @@ export default class PlayerBar extends Vue {
     }
   }
 
+  public changeVolum(value: number): void {
+    this.volum = value;
+  }
+
   //播放状态改变时调用
   public stateChange(): void {
     //改变播放状态
@@ -191,7 +213,8 @@ export default class PlayerBar extends Vue {
           this.currentTime = 0;
           let tPlayMode = this.$store.getters.playMode as PlayModeContext;
           //根据播放模式自动选择下一首
-          if (this.$store.state.playList.length !== 0) tPlayMode.autoPlay();
+          if (this.$store.state.playList.length !== 0)
+            tPlayMode.autoPlay(this.$store.state);
         }
         //计算百分比, 0 ~ 100
         this.progress = computedPercent(this.currentTime++, this.endTime);
@@ -223,13 +246,9 @@ export default class PlayerBar extends Vue {
     console.log("next...");
   }
 
-  public showVolum(): void {}
-
   public modeChange(): void {
     this.$store.commit(CHANGE_PLAY_MODE);
   }
-
-  public showPlayList(): void {}
 }
 </script>
 
@@ -294,7 +313,7 @@ $frame-height: 60px;
 
     .right {
       float: right;
-      margin: 15px 0;
+      margin: 10px 0;
     }
 
     .btn {
@@ -302,6 +321,13 @@ $frame-height: 60px;
       vertical-align: middle;
       width: 45px;
       height: 45px;
+
+      &.hidden {
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        color: $--color-primary;
+      }
 
       &:hover {
         cursor: pointer;
@@ -313,12 +339,69 @@ $frame-height: 60px;
       width: 35px;
       height: 35px;
       line-height: 30px;
-      padding: 0 5px;
+      padding: 0px 5px;
     }
 
     .volum {
+      display: inline-block;
       width: 30px;
-      height: 30px;
+      padding: 0px 5px;
+      position: relative;
+
+      @keyframes show {
+        0% {
+          clip-path: inset(100% 0px 0px 0px);
+        }
+        20% {
+          clip-path: inset(80% 0px 0px 0px);
+        }
+        40% {
+          clip-path: inset(60% 0px 0px 0px);
+        }
+        60% {
+          clip-path: inset(40% 0px 0px 0px);
+        }
+        80% {
+          clip-path: inset(20% 0px 0px 0px);
+        }
+        100% {
+          clip-path: inset(0px 0px 0px 0px);
+        }
+      }
+
+      .volum-fade-out-enter-active {
+        animation: {
+          name: show;
+          duration: 0.3s;
+          timing-function: ease-out;
+        }
+      }
+
+      .volum-fade-out-leave-active {
+        @extend .volum-fade-out-enter-active;
+        animation-direction: reverse;
+      }
+
+      img {
+        width: 30px;
+        height: 30px;
+        padding: 0px;
+      }
+
+      .el-slider {
+        display: inline-block;
+        height: 90px;
+        padding: {
+          top: 10px;
+          bottom: 15px;
+        }
+        position: absolute;
+        top: -130px;
+        background: white;
+        border: 2px solid $--color-primary;
+        border-bottom: none;
+        right: 0.5px;
+      }
     }
 
     .play {

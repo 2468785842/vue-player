@@ -33,6 +33,12 @@ async function getMusicDetail(ids: number): Promise<{ picUrl: string, name: stri
   return response.data.songs[0].al;
 }
 
+//获取推荐歌单
+async function getRecommendMusic(): Promise<Music[]> {
+  const response: any = await axios.get('/personalized/newsong');
+  return await wrapperMusic(response.data.result);
+}
+
 
 /**
  * 获取音乐url
@@ -59,5 +65,6 @@ export const Api = {
   getPersonalized,
   getMusicURL,
   getMusicList,
-  getMusicDetail
+  getMusicDetail,
+  getRecommendMusic
 };

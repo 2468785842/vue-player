@@ -7,7 +7,8 @@ const state: StateInterface = {
   playMode: 'loop-list',
   playState: 'pause',
   playList: [],
-  currentPlayIndex: -1
+  currentPlayIndex: -1,
+  music: new Audio()
 };
 
 interface StateInterface {
@@ -19,6 +20,7 @@ interface StateInterface {
   playList: Music[];
   //当前播放的音乐索引
   currentPlayIndex: number;
+  music: HTMLAudioElement;
 }
 
 export {

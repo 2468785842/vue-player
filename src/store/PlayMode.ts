@@ -1,59 +1,54 @@
+import BeanUtils from "@utils/BeanUtils";
 import { StateInterface } from "./state";
 
+/**
+ * 将共同方法抽象出来
+ */
 abstract class PlayModeContext {
-  public mode?: string;
-  protected state: StateInterface;
-  private music: HTMLAudioElement;
+  public abstract autoPlay(state: StateInterface): void;
 
-  constructor(state: StateInterface, music: HTMLAudioElement) {
-    this.state = state;
-    this.music = music;
-  }
-
-  public abstract autoPlay(): void;
-
-  protected resetMusic(src: string): void {
-    this.music.pause();
-    this.music.currentTime = 0;
-    this.music.src = src;
-    this.music.play();
+  protected resetMusic(state: StateInterface, src: string): void {
+    state.music.pause();
+    state.music.currentTime = 0;
+    state.music.src = src;
+    state.music.play();
   }
 }
 
+@BeanUtils.Bean('loop-list')()
 class LoopListMode extends PlayModeContext {
-  mode: string = 'loop-list';
 
-  public autoPlay(): void {
-    let index: number = this.state.currentPlayIndex++;
-    if (index >= this.state.playList.length) {
+  public autoPlay(state: StateInterface) {
+    let index: number = state.currentPlayIndex++;
+    if (index >= state.playList.length) {
       index = 0;
     }
-    this.resetMusic(this.state.playList[index].url);
+    this.resetMusic(state, state.playList[index].url);
   }
 
 }
 
+@BeanUtils.Bean('random')()
 class RadomMode extends PlayModeContext {
-  mode: string = 'radom';
 
-  autoPlay(): void {
+  autoPlay(state: StateInterface) {
     let index: number | undefined = undefined;
 
     do {
-      index = Math.random() * 100 % (this.state.playList.length - 1);
-    } while (index && index !== this.state.currentPlayIndex);
+      index = Math.random() * 100 % (state.playList.length - 1);
+    } while (index && index !== state.currentPlayIndex);
 
-    this.resetMusic(this.state.playList[index].url);
+    this.resetMusic(state, state.playList[index].url);
   }
 }
 
-
+@BeanUtils.Bean('loop')()
 class LoopMode extends PlayModeContext {
-  mode: string = 'loop';
 
-  autoPlay(): void {
-    this.resetMusic(this.state.playList[this.state.currentPlayIndex].url);
+  autoPlay(state: StateInterface) {
+    this.resetMusic(state, state.playList[state.currentPlayIndex].url);
   }
+
 }
 
 export {
