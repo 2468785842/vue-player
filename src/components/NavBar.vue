@@ -27,7 +27,7 @@ nav {
   top: 0px;
   background: white;
   border-bottom: 2px solid $--color-primary;
-  z-index: 1;
+  z-index: 2;
 
   .content {
     width: 1100px;

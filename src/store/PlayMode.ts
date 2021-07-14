@@ -7,12 +7,11 @@ import { StateInterface } from "./state";
 abstract class PlayModeContext {
   public abstract autoPlay(state: StateInterface): void;
 
-  protected resetMusic(state: StateInterface, src: string): void {
-    state.music.pause();
-    state.music.currentTime = 0;
-    state.music.src = src;
-    state.music.play();
+  public static resetMusic(state: StateInterface) {
+    state.music.src = state.playList[state.currentPlayIndex].url;
+    state.playState === 'play' && state.music.play();
   }
+
 }
 
 @BeanUtils.Bean('loop-list')()
@@ -23,7 +22,7 @@ class LoopListMode extends PlayModeContext {
     if (index >= state.playList.length) {
       index = 0;
     }
-    this.resetMusic(state, state.playList[index].url);
+    PlayModeContext.resetMusic(state);
   }
 
 }
@@ -37,8 +36,8 @@ class RadomMode extends PlayModeContext {
     do {
       index = Math.random() * 100 % (state.playList.length - 1);
     } while (index && index !== state.currentPlayIndex);
-
-    this.resetMusic(state, state.playList[index].url);
+    state.currentPlayIndex = index;
+    PlayModeContext.resetMusic(state);
   }
 }
 
@@ -46,7 +45,7 @@ class RadomMode extends PlayModeContext {
 class LoopMode extends PlayModeContext {
 
   autoPlay(state: StateInterface) {
-    this.resetMusic(state, state.playList[state.currentPlayIndex].url);
+    PlayModeContext.resetMusic(state);
   }
 
 }

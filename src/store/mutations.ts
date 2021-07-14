@@ -1,6 +1,10 @@
 import { StateInterface } from "@store/state";
-import { CHANGE_PLAY_MODE, CHANGE_PLAY_STATE } from "@store/type";
+import {
+  PLAY_NEXT_MUSIC, PLAY_PREVIOUS_MUSIC,
+  CHANGE_PLAY_MODE, CHANGE_PLAY_STATE
+} from "@store/type";
 import { MutationTree } from 'vuex';
+import { PlayModeContext } from "./PlayMode";
 
 const mutations: MutationTree<StateInterface> = {
   [CHANGE_PLAY_STATE](s: StateInterface) {
@@ -18,6 +22,20 @@ const mutations: MutationTree<StateInterface> = {
     } else {
       s.playMode = 'loop-list';
     }
+  },
+  [PLAY_NEXT_MUSIC](s: StateInterface) {
+    s.currentPlayIndex++;
+    if (s.currentPlayIndex >= s.playList.length) {
+      s.currentPlayIndex = 0;
+    }
+    PlayModeContext.resetMusic(s);
+  },
+  [PLAY_PREVIOUS_MUSIC](s: StateInterface) {
+    s.currentPlayIndex--;
+    if (s.currentPlayIndex < 0) {
+      s.currentPlayIndex = s.playList.length - 1;
+    }
+    PlayModeContext.resetMusic(s);
   }
 };
 

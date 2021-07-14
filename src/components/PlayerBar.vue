@@ -45,16 +45,16 @@
           <transition name="volum-fade-out">
             <el-slider
               vertical
-              v-show="showVolum"
-              v-model="volum"
+              v-show="showVolume"
+              v-model="volume"
               :show-tooltip="false"
-              @change="changeVolum"
+              @input="changeVolume"
             ></el-slider>
           </transition>
           <img
             src="@/assets/svg/player-bar/right/volum.svg"
             class="small-btn"
-            @click="showVolum = !showVolum"
+            @click="showVolume = !showVolume"
             title="音量"
           />
         </div>
@@ -69,7 +69,9 @@
           @click="showPlayList = !showPlayList"
           title="播放列表"
         />
-        <div class="hidden btn"><i class="el-icon-arrow-down"></i></div>
+        <div class="hidden btn" @click="thisShow = !thisShow">
+          <i class="el-icon-arrow-down"></i>
+        </div>
       </div>
     </div>
   </div>
@@ -88,10 +90,15 @@ import Random from "@assets/svg/player-bar/right/random.svg";
 
 import { PlayModeContext } from "@store/PlayMode";
 import { StateInterface } from "@store/state";
-import { CHANGE_PLAY_MODE, CHANGE_PLAY_STATE } from "@store/type";
+import {
+  CHANGE_PLAY_MODE,
+  CHANGE_PLAY_STATE,
+  PLAY_NEXT_MUSIC,
+  PLAY_PREVIOUS_MUSIC,
+} from "@store/type";
 import { computedPercent, secondToMinute } from "@utils/MusicUtils";
 import { Slider } from "element-ui";
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 
 @Component({
   data() {
@@ -110,11 +117,13 @@ import { Component, Vue } from "vue-property-decorator";
 export default class PlayerBar extends Vue {
   private autoMove: number | undefined; //自动移动 异步事件
 
-  private progress: number = 0; //0 ~ 100, 当前音乐播放进度百分比
+  progress: number = 0; //0 ~ 100, 当前音乐播放进度百分比
 
-  private volum: number = 0;
-  private showVolum: boolean = false;
-  private showPlayList: boolean = false;
+  volume: number = 0;
+
+  showVolume: boolean = false;
+  showPlayList: boolean = false;
+  thisShow: boolean = true;
 
   //音乐播放时间
   private currentTime: number = 0;
@@ -124,14 +133,26 @@ export default class PlayerBar extends Vue {
   name: string = "";
   cover: string = "";
 
-  public mounted(): void {
-    let tState: any = this.$store.state;
+  @Watch("$store.state.currentPlayIndex")
+  @Watch("$store.state.playList")
+  public watchCurrentPlayIndex() {
+    this.currentTime = 0; //改变显示信息
+    // this.stateChange(false);
+  }
+
+  //在这初始化某些事件
+  public mounted() {
+    let tState: StateInterface = this.$store.state;
+
+    this.volume = 100;
     if (tState.music) {
       //当持续时间改变时
       tState.music.addEventListener("durationchange", () => {
-        if (tState.music) {
-          this.endTime = tState.music.duration;
-        }
+        this.endTime = tState.music.duration;
+      });
+
+      tState.music.addEventListener("volumechange", () => {
+        this.volume = tState.music.volume * 100;
       });
     }
 
@@ -169,49 +190,47 @@ export default class PlayerBar extends Vue {
     this.stopAutoMoveProgress();
   }
 
-  public input(value: number): void {
+  public input(value: number) {
     if (!this.autoMove) {
       this.currentTime = (value / 100) * this.endTime;
     }
   }
 
-  public changeVolum(value: number): void {
-    this.volum = value;
-  }
-
   //播放状态改变时调用
-  public stateChange(): void {
+  public stateChange(shouldChange: boolean = true) {
     //改变播放状态
-    this.$store.commit(CHANGE_PLAY_STATE);
+    if (shouldChange) this.$store.commit(CHANGE_PLAY_STATE);
 
     let tPlayState = this.$store.state as StateInterface;
 
     if (tPlayState.currentPlayIndex === -1) {
+      console.log("no have music");
       return;
-    } else if (!this.$store.state.music.src) {
-      this.$store.state.music.src =
-        tPlayState.playList[tPlayState.currentPlayIndex];
+    } else if (!tPlayState.music.src) {
+      tPlayState.music.src =
+        tPlayState.playList[tPlayState.currentPlayIndex].url;
     }
 
     if (tPlayState.playState === "pause") {
-      this.$store.state.music.pause();
+      tPlayState.music.pause();
       this.stopAutoMoveProgress();
     } else {
-      this.$store.state.music.play();
+      tPlayState.music.play();
       this.autoMoveProgress();
     }
   }
 
   //只是移动进度条，不会对音乐播放做任何事
-  private autoMoveProgress(): void {
+  private autoMoveProgress() {
     if (!this.autoMove) {
       //异步任务
-      this.autoMove = setInterval(() => {
+      this.autoMove = window.setInterval(() => {
         //播放一首歌曲完毕时
         if (this.currentTime >= this.endTime) {
           this.progress = 0;
           this.currentTime = 0;
           let tPlayMode = this.$store.getters.playMode as PlayModeContext;
+
           //根据播放模式自动选择下一首
           if (this.$store.state.playList.length !== 0)
             tPlayMode.autoPlay(this.$store.state);
@@ -222,32 +241,42 @@ export default class PlayerBar extends Vue {
     }
   }
 
-  private stopAutoMoveProgress(): void {
+  private stopAutoMoveProgress() {
     if (this.autoMove) {
-      clearInterval(this.autoMove);
+      window.clearInterval(this.autoMove);
       this.autoMove = undefined;
     }
   }
 
   // 应用进度条的时间到音乐
-  private applayTimeToMusic(): void {
+  private applayTimeToMusic() {
     if (this.$store.state.music) {
       this.$store.state.music.currentTime = this.currentTime;
     }
   }
 
+  //============================//
+
   //下一首
   public previous(): void {
+    this.$store.commit(PLAY_PREVIOUS_MUSIC);
+    this.currentTime = 0; //改变显示信息
     console.log("previous...");
   }
 
   //上一首
   public next(): void {
+    this.$store.commit(PLAY_NEXT_MUSIC);
+    this.currentTime = 0; //改变显示信息
     console.log("next...");
   }
 
-  public modeChange(): void {
+  public modeChange() {
     this.$store.commit(CHANGE_PLAY_MODE);
+  }
+
+  public changeVolume(value: number) {
+    this.$store.state.music.volume = value / 100;
   }
 }
 </script>
@@ -265,6 +294,7 @@ $frame-height: 60px;
   position: fixed;
   bottom: 0px;
   text-align: center;
+  z-index: 2;
 
   .content {
     width: 1100px;
