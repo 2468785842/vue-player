@@ -21,7 +21,7 @@ describe('test music interface', () => {
 
 
   it('get recommend music', async () => {
-    let musics: Music[] = await Api.getRecommendMusic();
+    const musics: Music[] = await Api.getRecommendMusic();
     for (const item of musics) {
       console.log('music: ' + JSON.stringify(item));
     }

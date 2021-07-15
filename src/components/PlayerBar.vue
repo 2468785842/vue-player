@@ -23,9 +23,15 @@
       <!-- 中间 -->
       <div class="middle">
         <div class="music-desc">
-          <img class="cover" :src="cover" />
-          <div class="name">{{ name }}</div>
-          <div class="singer">{{ singer }}</div>
+          <el-image class="cover" :src="cover" fit="cover" lazy>
+            <div slot="error" style="height: inherit">
+              <i class="el-icon-picture-outline"></i>
+            </div>
+          </el-image>
+          <div class="info">
+            <div class="name">{{ name }}</div>
+            <div class="singer">{{ singer }}</div>
+          </div>
         </div>
 
         <span class="current-time">{{ secondToMinute(currentTime) }}</span>
@@ -133,21 +139,21 @@ export default class PlayerBar extends Vue {
   private currentTime: number = 0;
   private endTime: number = 0;
 
-  singer: string = "";
-  name: string = "";
+  singer: string = "未知";
+  name: string = "未知";
   cover: string = "";
 
   @Watch("$store.state.currentPlayIndex")
   @Watch("$store.state.playList")
   public watchCurrentPlayIndex(newValue: number | Music[]) {
+    this.currentTime = 0; //改变显示信息
+
     if (typeof newValue !== "number") {
       return;
     }
     const tPlayState: StateInterface = this.$store.state;
 
-    this.currentTime = 0; //改变显示信息
-
-    this.cover = tPlayState.playList[newValue].cover ?? "未知";
+    this.cover = tPlayState.playList[newValue].picUrl ?? "";
     this.name = tPlayState.playList[newValue].name;
     this.singer = tPlayState.playList[newValue].singer ?? "未知";
 
@@ -159,16 +165,14 @@ export default class PlayerBar extends Vue {
     const tPlayState: StateInterface = this.$store.state;
 
     this.volume = 100;
-    if (tPlayState.music.src) {
-      //当持续时间改变时
-      tPlayState.music.addEventListener("durationchange", () => {
-        this.endTime = tPlayState.music.duration;
-      });
+    //当持续时间改变时
+    tPlayState.music.addEventListener("durationchange", () => {
+      this.endTime = tPlayState.music.duration;
+    });
 
-      tPlayState.music.addEventListener("volumechange", () => {
-        this.volume = tPlayState.music.volume * 100;
-      });
-    }
+    tPlayState.music.addEventListener("volumechange", () => {
+      this.volume = tPlayState.music.volume * 100;
+    });
 
     //为进度条添加鼠标按下事件
     //循环获取Slider的dom节点
@@ -185,7 +189,7 @@ export default class PlayerBar extends Vue {
     //当按下空格时, 暂停音乐
     window.addEventListener("keypress", (event: KeyboardEvent) => {
       if (event.code === "Space") {
-        this.stateChange();
+        this.$store.commit(CHANGE_PLAY_STATE);
       }
     });
   }
@@ -245,6 +249,7 @@ export default class PlayerBar extends Vue {
         if (this.currentTime >= this.endTime) {
           this.progress = 0;
           this.currentTime = 0;
+          console.log("歌曲播放完毕");
           //根据播放模式自动选择下一首
           this.$store.getters.playMode.autoPlay(this.$store.state);
         }
@@ -311,12 +316,52 @@ $frame-height: 60px;
       line-height: $frame-height;
 
       .music-desc {
-        display: inline-block;
+        float: left;
+        font-size: 10px;
+        height: $frame-height;
+
         .cover {
+          outline: 1px solid $--color-primary;
+          height: 50px;
+          width: 50px;
+          float: left;
+          top: 5px;
         }
-        .name {
+
+        .info {
+          float: right;
+          width: 75px;
+          line-height: initial;
+          position: relative;
+          top: 10px;
+          padding: 0px 10px;
+
+          .name,
+          .singer {
+            text-align: left;
+            width: inherit;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+
+          .name {
+            font-size: 13px;
+            padding-bottom: 5px;
+          }
+
+          .singer {
+            font-size: 10px;
+            color: gray;
+          }
         }
-        .singer {
+
+        &::after {
+          display: block;
+          content: "";
+          clear: both;
+          width: 0px;
+          height: 0px;
         }
       }
 
@@ -442,7 +487,7 @@ $frame-height: 60px;
 
     .play {
       width: 60px;
-      height: 60px;
+      height: $frame-height;
     }
   }
 }

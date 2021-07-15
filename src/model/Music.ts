@@ -7,10 +7,9 @@ class Music {
   id: number;
   url: string;
   name: string;
-  picUrl: string;
+  picUrl: string | null;
 
   album?: string;
-  cover?: string;
   singer?: string;
   playCount?: string;
   trackNumberUpdateTime?: string;

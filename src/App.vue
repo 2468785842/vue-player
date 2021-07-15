@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <NavBar />
-    <keep-alive include="MusicListGroup">
+    <keep-alive include="Home">
       <router-view></router-view>
     </keep-alive>
     <PlayerBar />

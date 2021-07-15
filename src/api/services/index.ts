@@ -25,12 +25,13 @@ async function getMusicList(id: number): Promise<Music[]> {
 }
 
 //获取歌曲详细信息
-async function getMusicDetail(ids: number): Promise<{ picUrl: string, name: string; }> {
+async function getMusicDetail(ids: number): Promise<{ ar: any, al: any; name: string; }> {
   const response: any = await axios.get('/song/detail', {
     params: { ids }
   });
 
-  return response.data.songs[0].al;
+  console.log(JSON.stringify(response.data));
+  return response.data.songs[0];
 }
 
 //获取推荐歌单

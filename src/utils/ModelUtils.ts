@@ -24,17 +24,15 @@ export async function wrapperMusic(list: any[]) {
 
   for (const item of list) {
 
-    const al = await Api.getMusicDetail(item.id);
+    const musicDetail = await Api.getMusicDetail(item.id);
     const url = await Api.getMusicURL(item.id) as string;
 
     //chargeInfoList
     const music: Music = new Music(
-      item.id, al.name, url, al.picUrl
+      item.id, musicDetail.name, url, musicDetail.al.picUrl
     );
 
-    music.singer = item.singer;
-    music.cover = item.cover;
-    console.log(JSON.stringify(music));
+    music.singer = musicDetail.ar[0].name;
     tList.push(music);
   }
 

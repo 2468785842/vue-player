@@ -24,6 +24,7 @@ const mutations: MutationTree<StateInterface> = {
     }
   },
   [PLAY_NEXT_MUSIC](s: StateInterface) {
+    console.log('下一首');
     s.currentPlayIndex++;
     if (s.currentPlayIndex >= s.playList.length) {
       s.currentPlayIndex = 0;

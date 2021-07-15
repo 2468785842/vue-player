@@ -11,6 +11,6 @@ class Test1 {
 }
 
 it('test Bean decorator', () => {
-  let bean = BeanUtils.getBean('a');
+  const bean = BeanUtils.getBean('a');
   console.log(JSON.stringify(bean));
 });
