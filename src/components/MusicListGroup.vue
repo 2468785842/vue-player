@@ -56,6 +56,7 @@ import { PlayModeContext } from "@store/PlayMode";
 
 import GroupLoading from "@components/GroupLoading.vue";
 import { StateInterface } from "@store/state";
+import { CHANGE_PLAY_STATE } from "@store/type";
 
 @Component({
   data() {
@@ -70,25 +71,30 @@ import { StateInterface } from "@store/state";
 })
 export default class MusicListGroup extends Vue {
   @Prop()
-  playLists?: MusicList[];
+  playLists?: MusicList[]; //歌单
 
   @Prop({ type: Boolean, required: true })
-  loading?: boolean;
+  loading?: boolean; //是否加载完成
 
   @Prop()
-  routePath?: string;
+  routePath?: string; //跳转歌单到路由
 
   onPlayId: number = -1;
   onLoading: boolean = true;
 
-  async setPlayList(id: number): Promise<void> {
+  //设置播放列表
+  async setPlayList(id: number) {
     const tState = this.$store.state as StateInterface;
+
     this.onPlayId = id;
     this.onLoading = true;
+
     tState.playList = await Api.getMusicList(id);
     tState.currentPlayIndex = 0;
-    // tState.music.src = tState.playList[tState.currentPlayIndex].url;
+
     PlayModeContext.resetMusic(tState);
+
+    tState.playState === "pause" && this.$store.commit(CHANGE_PLAY_STATE);
     this.onLoading = false;
   }
 }

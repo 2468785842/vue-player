@@ -3,7 +3,7 @@ import { MusicList } from "@model/MusicList";
 import { Api } from '@services';
 
 //包装歌单对象
-export async function wrapperMusicList(list: any[]): Promise<MusicList[]> {
+export async function wrapperMusicList(list: any[]) {
   const tList: MusicList[] = [];
 
   for (const item of list) {
@@ -19,17 +19,23 @@ export async function wrapperMusicList(list: any[]): Promise<MusicList[]> {
 }
 
 //包装歌曲对象
-export async function wrapperMusic(list: any[]): Promise<Music[]> {
+export async function wrapperMusic(list: any[]) {
   const tList: Music[] = [];
 
   for (const item of list) {
 
     const al = await Api.getMusicDetail(item.id);
     const url = await Api.getMusicURL(item.id) as string;
+
     //chargeInfoList
-    tList.push(new Music(
+    const music: Music = new Music(
       item.id, al.name, url, al.picUrl
-    ));
+    );
+
+    music.singer = item.singer;
+    music.cover = item.cover;
+    console.log(JSON.stringify(music));
+    tList.push(music);
   }
 
   return tList;

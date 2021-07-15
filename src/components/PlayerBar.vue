@@ -9,9 +9,9 @@
           @click="previous"
         />
         <img
-          :src="$store.state.playState === 'pause' ? PlaySvg : PauseSvg"
+          :src="playStateIcon[$store.state.playState]"
           class="btn play"
-          @click="stateChange"
+          @click="$store.commit(CHANGE_PLAY_STATE)"
         />
         <img
           src="@/assets/svg/player-bar/left/next.svg"
@@ -25,7 +25,7 @@
         <div class="music-desc">
           <img class="cover" :src="cover" />
           <div class="name">{{ name }}</div>
-          <div class="author">{{ author }}</div>
+          <div class="singer">{{ singer }}</div>
         </div>
 
         <span class="current-time">{{ secondToMinute(currentTime) }}</span>
@@ -61,7 +61,7 @@
         <img
           :src="playModeIcon[$store.state.playMode]"
           class="small-btn"
-          @click="modeChange"
+          @click="$store.commit(CHANGE_PLAY_MODE)"
         />
         <img
           src="@/assets/svg/player-bar/right/play-list.svg"
@@ -87,8 +87,8 @@ import PlaySvg from "@assets/svg/player-bar/left/play.svg";
 import LoopList from "@assets/svg/player-bar/right/loop-list.svg";
 import Loop from "@assets/svg/player-bar/right/loop.svg";
 import Random from "@assets/svg/player-bar/right/random.svg";
+import { Music } from "@model/Music";
 
-import { PlayModeContext } from "@store/PlayMode";
 import { StateInterface } from "@store/state";
 import {
   CHANGE_PLAY_MODE,
@@ -104,8 +104,12 @@ import { Component, Vue, Watch } from "vue-property-decorator";
   data() {
     return {
       secondToMinute,
-      PlaySvg,
-      PauseSvg,
+      CHANGE_PLAY_STATE,
+      CHANGE_PLAY_MODE,
+      playStateIcon: {
+        pause: PlaySvg,
+        play: PauseSvg,
+      },
       playModeIcon: {
         "loop-list": LoopList,
         loop: Loop,
@@ -129,30 +133,40 @@ export default class PlayerBar extends Vue {
   private currentTime: number = 0;
   private endTime: number = 0;
 
-  author: string = "";
+  singer: string = "";
   name: string = "";
   cover: string = "";
 
   @Watch("$store.state.currentPlayIndex")
   @Watch("$store.state.playList")
-  public watchCurrentPlayIndex() {
+  public watchCurrentPlayIndex(newValue: number | Music[]) {
+    if (typeof newValue !== "number") {
+      return;
+    }
+    const tPlayState: StateInterface = this.$store.state;
+
     this.currentTime = 0; //改变显示信息
+
+    this.cover = tPlayState.playList[newValue].cover ?? "未知";
+    this.name = tPlayState.playList[newValue].name;
+    this.singer = tPlayState.playList[newValue].singer ?? "未知";
+
     // this.stateChange(false);
   }
 
   //在这初始化某些事件
   public mounted() {
-    let tState: StateInterface = this.$store.state;
+    const tPlayState: StateInterface = this.$store.state;
 
     this.volume = 100;
-    if (tState.music) {
+    if (tPlayState.music.src) {
       //当持续时间改变时
-      tState.music.addEventListener("durationchange", () => {
-        this.endTime = tState.music.duration;
+      tPlayState.music.addEventListener("durationchange", () => {
+        this.endTime = tPlayState.music.duration;
       });
 
-      tState.music.addEventListener("volumechange", () => {
-        this.volume = tState.music.volume * 100;
+      tPlayState.music.addEventListener("volumechange", () => {
+        this.volume = tPlayState.music.volume * 100;
       });
     }
 
@@ -177,7 +191,7 @@ export default class PlayerBar extends Vue {
   }
 
   //松开进度条按钮时
-  public change(): void {
+  public change() {
     //只有在抬起之后才应用快进的时间
     this.applayTimeToMusic();
     if (this.$store.state.playMode !== "pause") {
@@ -186,7 +200,7 @@ export default class PlayerBar extends Vue {
   }
 
   //按下进度条时
-  public down(): void {
+  public down() {
     this.stopAutoMoveProgress();
   }
 
@@ -197,25 +211,24 @@ export default class PlayerBar extends Vue {
   }
 
   //播放状态改变时调用
-  public stateChange(shouldChange: boolean = true) {
-    //改变播放状态
-    if (shouldChange) this.$store.commit(CHANGE_PLAY_STATE);
+  @Watch("$store.state.playState")
+  public stateChange() {
+    const tState: StateInterface = this.$store.state;
 
-    let tPlayState = this.$store.state as StateInterface;
-
-    if (tPlayState.currentPlayIndex === -1) {
+    if (tState.currentPlayIndex === -1 || tState.playList.length < 1) {
       console.log("no have music");
       return;
-    } else if (!tPlayState.music.src) {
-      tPlayState.music.src =
-        tPlayState.playList[tPlayState.currentPlayIndex].url;
     }
 
-    if (tPlayState.playState === "pause") {
-      tPlayState.music.pause();
+    if (!tState.music.src) {
+      tState.music.src = tState.playList[tState.currentPlayIndex].url;
+    }
+
+    tState.music[tState.playState](); //通过key动态执行function
+
+    if (tState.playState === "pause") {
       this.stopAutoMoveProgress();
     } else {
-      tPlayState.music.play();
       this.autoMoveProgress();
     }
   }
@@ -225,18 +238,16 @@ export default class PlayerBar extends Vue {
     if (!this.autoMove) {
       //异步任务
       this.autoMove = window.setInterval(() => {
+        //计算百分比, 0 ~ 100
+        this.progress = computedPercent(this.currentTime++, this.endTime);
+
         //播放一首歌曲完毕时
         if (this.currentTime >= this.endTime) {
           this.progress = 0;
           this.currentTime = 0;
-          let tPlayMode = this.$store.getters.playMode as PlayModeContext;
-
           //根据播放模式自动选择下一首
-          if (this.$store.state.playList.length !== 0)
-            tPlayMode.autoPlay(this.$store.state);
+          this.$store.getters.playMode.autoPlay(this.$store.state);
         }
-        //计算百分比, 0 ~ 100
-        this.progress = computedPercent(this.currentTime++, this.endTime);
       }, 1000);
     }
   }
@@ -250,7 +261,8 @@ export default class PlayerBar extends Vue {
 
   // 应用进度条的时间到音乐
   private applayTimeToMusic() {
-    if (this.$store.state.music) {
+    //music加载了音乐
+    if (this.$store.state.music.src) {
       this.$store.state.music.currentTime = this.currentTime;
     }
   }
@@ -258,21 +270,15 @@ export default class PlayerBar extends Vue {
   //============================//
 
   //下一首
-  public previous(): void {
+  public previous() {
     this.$store.commit(PLAY_PREVIOUS_MUSIC);
-    this.currentTime = 0; //改变显示信息
     console.log("previous...");
   }
 
   //上一首
-  public next(): void {
+  public next() {
     this.$store.commit(PLAY_NEXT_MUSIC);
-    this.currentTime = 0; //改变显示信息
     console.log("next...");
-  }
-
-  public modeChange() {
-    this.$store.commit(CHANGE_PLAY_MODE);
   }
 
   public changeVolume(value: number) {
@@ -310,7 +316,7 @@ $frame-height: 60px;
         }
         .name {
         }
-        .author {
+        .singer {
         }
       }
 

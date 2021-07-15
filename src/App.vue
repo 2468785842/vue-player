@@ -1,7 +1,9 @@
 <template>
   <div id="app">
     <NavBar />
-    <router-view></router-view>
+    <keep-alive include="MusicListGroup">
+      <router-view></router-view>
+    </keep-alive>
     <PlayerBar />
   </div>
 </template>
